@@ -158,8 +158,3 @@ components:
           type: array
           items: { type: string }
         visibility_scope: { type: string }
-securitySchemes:
-  bearerAuth:
-    type: http
-    scheme: bearer
-    bearerFormat: JWT

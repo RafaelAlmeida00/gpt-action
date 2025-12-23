@@ -1,10 +1,10 @@
 # Re:Zero Narrative API (Supabase + Vercel)
 
-API serverless em Node.js/TypeScript para campanhas narrativas com Supabase (RLS) e endpoints de contexto para GPT Actions.
+API serverless em Node.js/TypeScript para campanhas narrativas com Postgres/Supabase e endpoints de contexto para GPT Actions.
 
 ## Visão geral
 - Supabase/Postgres com tabelas para regras, NPCs, arcos, timeline, memórias com pgvector.
-- Multi-tenancy por `user_id` + `campaign_id` com RLS.
+- Multi-tenancy por `user_id` + `campaign_id` com RLS (sem autenticação na API; o escopo é enviado no payload).
 - Endpoints REST (CRUD) e rotas inteligentes de contexto/memórias.
 - Deploy pronto para Vercel (`vercel.json`).
 
@@ -21,14 +21,14 @@ API serverless em Node.js/TypeScript para campanhas narrativas com Supabase (RLS
 - `npc_habilidades`, `jogador_habilidades`: relação muitos-para-muitos com habilidades.
 
 ## Setup local
-1. `cp .env.example .env` e preencha `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`.
+1. `cp .env.example .env` e preencha `DATABASE_URL` (ex.: `postgresql://postgres:[YOUR-PASSWORD]@db.lpabgnlbdyeaphnwdjza.supabase.co:5432/postgres`).
 2. Instale deps: `npm install`.
 3. Rodar dev: `npm run dev` (http://localhost:3000/health).
 
 ## Supabase
 1. `supabase db push --file sql/schema.sql` (ou via SQL Editor) para criar tudo com seeds.
 2. Seeds usam `user_id = aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa` e `campaign_id = 1111...`. Ajuste conforme necessidade.
-3. Policies RLS restringem todas as tabelas por `auth.uid() = user_id` (eventos canônicos têm leitura pública).
+3. Policies RLS seguem ativas no banco, mas a API **não valida JWT**; envie `user_id`/`campaign_id` explicitamente para manter o isolamento lógico.
 4. Funções RPC: `get_npc_visible_context(campaign_id, npc_id)` e `get_player_visible_context(campaign_id, player_id)`.
 
 ## Deploy na Vercel
@@ -46,9 +46,8 @@ API serverless em Node.js/TypeScript para campanhas narrativas com Supabase (RLS
 - Rodar: `npm test`.
 - Watch: `npm run test:watch`.
 - Cobertura: `npm run test:coverage`.
-- Testes usam mock do Supabase para cobrir autenticação, validação, not-found e cross-user.
+- Testes usam mock do Postgres (helpers em memória) para cobrir validação, not-found e cross-user.
 
 ## Boas práticas
-- Sempre envie `Authorization: Bearer <jwt>` onde `sub` = `user_id` para alinhar com RLS.
-- Inclua `campaign_id` em todos os payloads; o backend reforça `user_id` a partir do token.
+- Inclua `campaign_id` (e `user_id` quando aplicável) em todos os payloads para manter o escopo coerente.
 - Para RAG, injete embeddings em `/events/embeddings/ingest` e ajuste a coluna `embedding` (vetor 1536).
