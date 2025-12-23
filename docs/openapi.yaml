@@ -1,0 +1,165 @@
+openapi: 3.1.0
+title: ReZero Narrative API
+version: 1.0.0
+servers:
+  - url: https://your-vercel-deployment
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: ok
+  /regras:
+    get:
+      summary: List regras
+      parameters:
+        - in: query
+          name: campaign_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200': { description: Success }
+    post:
+      summary: Create regra
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Regra'
+      responses:
+        '201': { description: Created }
+  /regras/{id}:
+    get:
+      summary: Get regra
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Ok }
+    patch:
+      summary: Update regra
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Regra'
+      responses:
+        '200': { description: Updated }
+    delete:
+      summary: Delete regra
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: Deleted }
+  /context/npc:
+    post:
+      summary: Build NPC visible context
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NpcContextRequest'
+      responses:
+        '200': { description: Context }
+  /context/player:
+    post:
+      summary: Build player visible context
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlayerContextRequest'
+      responses:
+        '200': { description: Context }
+  /events/log:
+    post:
+      summary: Append event to timeline
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventLog'
+      responses:
+        '201': { description: Created }
+  /events/memories/search:
+    get:
+      summary: Search memories
+      parameters:
+        - in: query
+          name: campaign_id
+          schema: { type: string }
+        - in: query
+          name: query
+          schema: { type: string }
+        - in: query
+          name: entity_type
+          schema: { type: string }
+        - in: query
+          name: entity_id
+          schema: { type: string }
+      responses:
+        '200': { description: Results }
+components:
+  schemas:
+    Regra:
+      type: object
+      properties:
+        campaign_id: { type: string, format: uuid }
+        user_id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        system_id: { type: string }
+    NpcContextRequest:
+      type: object
+      properties:
+        campaign_id: { type: string, format: uuid }
+        npc_id: { type: string }
+        local_id: { type: string }
+        time: { type: string, format: date-time }
+        arc_ids:
+          type: array
+          items: { type: string }
+        player_state_hint: { type: string }
+    PlayerContextRequest:
+      type: object
+      properties:
+        campaign_id: { type: string }
+        player_id: { type: string }
+        local_id: { type: string }
+        time: { type: string, format: date-time }
+        arc_ids:
+          type: array
+          items: { type: string }
+    EventLog:
+      type: object
+      properties:
+        campaign_id: { type: string }
+        user_id: { type: string }
+        kind: { type: string }
+        text: { type: string }
+        happened_at: { type: string, format: date-time }
+        participants:
+          type: array
+          items: { type: string }
+        visibility_scope: { type: string }
+securitySchemes:
+  bearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT
