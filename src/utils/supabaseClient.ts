@@ -17,8 +17,14 @@ function buildWhere(db: Sql, filters: Filters) {
     }
     return db`${db(key)} = ${value}`;
   });
+
   if (!clauses.length) return db``;
-  return db`WHERE ${db.join(clauses, db` AND `)}`;
+
+  const [firstClause, ...remainingClauses] = clauses;
+
+  return remainingClauses.reduce((whereClause, clause) => {
+    return db`${whereClause} AND ${clause}`;
+  }, db`WHERE ${firstClause}`);
 }
 
 export async function listRows<T = any>(table: string, filters: Filters = {}, options: { limit?: number } = {}) {
